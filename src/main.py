@@ -66,11 +66,15 @@ class TradingBot:
                 print("Failed to fetch market data, skipping cycle")
                 return
             
-            # Step 2: Extract price data and current price
+            # Step 2: Extract price data and get latest real-time price
             closes = extract_closes(bars)
-            current_price = closes[-1]
             
-            print(f"  Price: ${current_price:,.2f} | Data points: {len(closes)}")
+            # Get latest real-time price (fresher than historical bars)
+            latest_price = self.data_fetcher.get_latest_price(self.config.btc_symbol)
+            current_price = latest_price if latest_price is not None else closes[-1]
+            
+            latest_str = f"{latest_price:,.2f}" if latest_price else "N/A"
+            print(f"  Price: ${current_price:,.2f} | Data points: {len(closes)} (Live: ${latest_str})")
             
             # Step 3: Get current position
             if self.config.paper_mode:
