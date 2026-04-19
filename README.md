@@ -93,6 +93,64 @@ You should see:
 - The filled order under "Recent Orders"
 - Updated cash balance (~$90,000 after buying $10,000 worth of BTC)
 
+## Docker Deployment (Optional)
+
+For 24/7 cloud deployment or consistent environments:
+
+### Quick Start with Docker
+
+```bash
+# Build and run with docker-compose
+docker-compose up -d
+
+# View logs
+docker-compose logs -f trading-bot
+
+# Stop the bot
+docker-compose down
+```
+
+### Manual Docker Build
+
+```bash
+# Build image
+docker build -t crypto-trading-bot .
+
+# Run container
+docker run -d --name trading-bot \
+  --env-file .env \
+  -v $(pwd)/data/logs:/app/data/logs \
+  -v $(pwd)/data/history:/app/data/history \
+  crypto-trading-bot
+
+# View logs
+docker logs -f trading-bot
+```
+
+### Docker Configuration
+
+- `Dockerfile` - Python 3.12 slim image with all dependencies
+- `docker-compose.yml` - Easy orchestration with volume mounts
+- `.dockerignore` - Excludes unnecessary files (env, git, tests)
+- Logs and history are persisted via volume mounts
+
+### Deploy to Cloud (AWS/GCP/Azure)
+
+```bash
+# Build for deployment
+docker build -t crypto-trading-bot:latest .
+
+# Push to registry
+docker tag crypto-trading-bot:latest your-registry/crypto-trading-bot:latest
+docker push your-registry/crypto-trading-bot:latest
+
+# Run on cloud server
+docker run -d --restart unless-stopped \
+  --env-file .env \
+  -v /host/logs:/app/data/logs \
+  crypto-trading-bot:latest
+```
+
 ## Trading Strategy
 
 **Current Strategy (MACD-Only for Testing):**

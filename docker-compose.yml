@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  trading-bot:
+    build: .
+    container_name: crypto-trading-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      # Mount logs directory to persist trade history
+      - ./data/logs:/app/data/logs
+      - ./data/history:/app/data/history
+    environment:
+      - PYTHONUNBUFFERED=1
+    # Keep container running even if bot stops (for debugging)
+    stdin_open: true
+    tty: true
