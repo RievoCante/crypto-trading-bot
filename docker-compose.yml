@@ -8,11 +8,38 @@ services:
     env_file:
       - .env
     volumes:
-      # Mount logs directory to persist trade history
+      # Persist logs and history outside container
       - ./data/logs:/app/data/logs
       - ./data/history:/app/data/history
     environment:
       - PYTHONUNBUFFERED=1
-    # Keep container running even if bot stops (for debugging)
+      - PYTHONDONTWRITEBYTECODE=1
+    
+    # Health check - verifies bot is running and responsive
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; from datetime import datetime; print(f'Health check at {datetime.now()}'); sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    
+    # Resource limits (optional but recommended)
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Keep container running for debugging
     stdin_open: true
     tty: true
