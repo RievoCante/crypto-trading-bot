@@ -124,11 +124,9 @@ class TradingBot:
             if order:
                 print(f"  Order: {order['side'].upper()} {order['qty']:.4f} BTC")
                 
-                if self.config.paper_mode:
-                    success = self.trader.execute_order(order, fill_price=current_price)
-                else:
-                    result = self.trader.execute_order(order)
-                    success = result is not None
+                # Execute order via Alpaca API (paper or live)
+                result = self.trader.execute_order(order)
+                success = result is not None
                 
                 if success:
                     print(f"  Order executed successfully")
