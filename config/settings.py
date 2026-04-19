@@ -23,6 +23,9 @@ class Config:
     # Trading mode
     paper_mode: bool = True
     
+    # Test mode (forces immediate trades for testing)
+    test_mode: bool = False
+    
     # Trading parameters
     btc_symbol: str = "BTC/USD"
     trading_interval_minutes: int = 5
@@ -63,6 +66,9 @@ class Config:
         
         paper_mode_str = os.getenv("PAPER_MODE", "true").lower()
         paper_mode = paper_mode_str == "true"
+        
+        test_mode_str = os.getenv("TEST_MODE", "false").lower()
+        test_mode = test_mode_str == "true"
 
         # Validate numeric environment variables
         try:
@@ -119,6 +125,7 @@ class Config:
             api_key=api_key,
             api_secret=api_secret,
             paper_mode=paper_mode,
+            test_mode=test_mode,
             btc_symbol=os.getenv("BTC_SYMBOL", "BTC/USD"),
             trading_interval_minutes=trading_interval_minutes,
             rsi_period=rsi_period,

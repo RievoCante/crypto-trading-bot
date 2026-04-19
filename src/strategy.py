@@ -140,17 +140,18 @@ def generate_signal(
     rsi_overbought: float = 70.0,
     macd_fast: int = 12,
     macd_slow: int = 26,
-    macd_signal: int = 9
+    macd_signal: int = 9,
+    test_mode: bool = False
 ) -> Signal:
     """Generate trading signal based on MACD crossovers only.
     
-    Strategy Rules (Testing Mode):
+    Strategy Rules:
     - BUY: MACD crosses above signal line AND not holding
     - SELL: MACD crosses below signal line AND holding
     - HOLD: All other conditions
     
-    Note: RSI parameters are kept for compatibility but not used in this
-    simplified strategy for testing purposes.
+    Test Mode:
+    - When test_mode=True, forces BUY signal if not holding (for testing)
     
     Args:
         prices: List of price values (closes)
@@ -159,20 +160,30 @@ def generate_signal(
         rsi_oversold: RSI threshold for buy signal (unused in this strategy)
         rsi_overbought: RSI threshold for sell signal (unused in this strategy)
         macd_fast, macd_slow, macd_signal: MACD parameters
+        test_mode: If True, forces immediate trades for testing
         
     Returns:
         Signal enum: BUY, SELL, or HOLD
     """
+    # Test mode: force immediate trades for testing
+    if test_mode:
+        if current_position == 0.0:
+            print("  [TEST MODE] Forcing BUY signal for testing")
+            return Signal.BUY
+        else:
+            print("  [TEST MODE] Forcing SELL signal for testing")
+            return Signal.SELL
+    
     macd_crossover = detect_macd_crossover(
         prices, fast=macd_fast, slow=macd_slow, signal=macd_signal
     )
     
     signal = Signal.HOLD
     
-    # Buy on bullish MACD crossover (no RSI requirement for testing)
+    # Buy on bullish MACD crossover
     if macd_crossover == "bullish" and current_position == 0.0:
         signal = Signal.BUY
-    # Sell on bearish MACD crossover (no RSI requirement for testing)
+    # Sell on bearish MACD crossover
     elif macd_crossover == "bearish" and current_position > 0.0:
         signal = Signal.SELL
     

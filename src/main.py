@@ -106,7 +106,8 @@ class TradingBot:
                 rsi_overbought=self.config.rsi_overbought,
                 macd_fast=self.config.macd_fast,
                 macd_slow=self.config.macd_slow,
-                macd_signal=self.config.macd_signal
+                macd_signal=self.config.macd_signal,
+                test_mode=self.config.test_mode
             )
             
             print(f"  Signal: {signal.value.upper()}")
