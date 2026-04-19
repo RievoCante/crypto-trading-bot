@@ -56,6 +56,7 @@ class TestTradingBot:
             mock_fetcher_instance.get_historical_bars.return_value = pd.DataFrame({
                 'close': list(range(100, 150))
             })
+            mock_fetcher_instance.get_latest_price.return_value = 40000.0
             mock_fetcher_class.return_value = mock_fetcher_instance
             
             mock_engine_instance = MagicMock()
