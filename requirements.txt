@@ -2,10 +2,11 @@
 alpaca-py>=0.20.0
 pandas>=2.0.0
 numpy>=1.24.0
-pandas-ta>=0.3.0
+pandas-ta==0.4.67b0
 python-dotenv>=1.0.0
 requests>=2.31.0
 websocket-client>=1.6.0
+pytz>=2024.1
 
 # Development dependencies
 pytest>=7.4.0
