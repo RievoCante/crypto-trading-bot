@@ -1,6 +1,6 @@
 """Live trading executor for executing real trades via Alpaca API.
 
-WARNING: This module uses real money. Only initialize when PAPER_MODE=false.
+Can be used for both paper trading (simulated) and live trading (real money).
 """
 from typing import Dict, Any, Optional
 
@@ -12,32 +12,33 @@ from config.settings import Config
 
 
 class LiveTrader:
-    """Live trading executor.
+    """Trading executor for Alpaca API.
     
-    Executes real trades via Alpaca Trading API. Uses actual funds from
-    your brokerage account. Double-check configuration before using.
+    Executes trades via Alpaca Trading API. Can operate in paper mode
+    (simulated trades) or live mode (real money). Trades executed in
+    paper mode will appear in the Alpaca paper trading dashboard.
     """
     
     def __init__(self, config: Config):
-        """Initialize live trader with configuration.
+        """Initialize trader with configuration.
         
-        Raises:
-            RuntimeError: If config has paper_mode=True (safety check)
+        Uses paper trading API when paper_mode=True, live API when paper_mode=False.
         """
         self.config = config
         
-        if config.paper_mode:
-            raise RuntimeError(
-                "LiveTrader cannot be initialized with paper_mode=True. "
-                "Set PAPER_MODE=false in your .env file to trade with real money. "
-                "WARNING: This will use real funds from your account!"
-            )
+        # Use paper trading API when in paper mode
+        use_paper = config.paper_mode
         
         self._client = TradingClient(
             api_key=config.api_key,
             secret_key=config.api_secret,
-            paper=False
+            paper=use_paper
         )
+        
+        if config.paper_mode:
+            print("LiveTrader initialized in PAPER mode (orders go to Alpaca's paper trading system)")
+        else:
+            print("LiveTrader initialized in LIVE mode (REAL MONEY - use with caution!)")
     
     def execute_order(self, order: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Execute a real order via Alpaca Trading API."""

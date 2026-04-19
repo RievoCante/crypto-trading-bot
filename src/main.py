@@ -36,7 +36,10 @@ class TradingBot:
             print("=" * 60)
             print("PAPER TRADING MODE - Using fake money")
             print("=" * 60)
-            self.trader = PaperTrader(initial_balance=100000.0)
+            # Use LiveTrader with paper=True to send orders to Alpaca's paper trading system
+            # This makes trades visible in the Alpaca dashboard
+            self.trader = LiveTrader(config)
+            print("Using Alpaca Paper Trading API - trades will appear in dashboard")
         else:
             print("=" * 60)
             print("LIVE TRADING MODE - Using REAL money!")
