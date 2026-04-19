@@ -45,14 +45,14 @@ class AlpacaDataFetcher:
     def get_historical_bars(
         self,
         symbol: str,
-        timeframe: TimeFrame = TimeFrame.Minute,
+        timeframe: TimeFrame = TimeFrame.Hour,
         limit: int = 100
     ) -> Optional[pd.DataFrame]:
         """Fetch historical price bars for a symbol.
         
         Args:
             symbol: Trading pair symbol (e.g., "BTC/USD")
-            timeframe: Bar timeframe (default 1 minute)
+            timeframe: Bar timeframe (default 1 hour for crypto)
             limit: Number of bars to fetch (max 10000)
             
         Returns:
@@ -62,7 +62,13 @@ class AlpacaDataFetcher:
             client = self._get_client()
             
             end = datetime.now()
-            start = end - timedelta(minutes=limit + 5)
+            # For crypto, use longer time range to ensure we get data
+            if timeframe == TimeFrame.Minute:
+                start = end - timedelta(minutes=limit * 2)
+            elif timeframe == TimeFrame.Hour:
+                start = end - timedelta(hours=limit * 2)
+            else:
+                start = end - timedelta(days=limit)
             
             request = CryptoBarsRequest(
                 symbol_or_symbols=symbol,
@@ -75,12 +81,15 @@ class AlpacaDataFetcher:
             bars = client.get_crypto_bars(request)
             
             if bars is None or bars.df is None or bars.df.empty:
+                print(f"Warning: No data returned for {symbol}")
                 return None
             
             return bars.df
             
         except Exception as e:
             print(f"Error fetching historical bars: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def get_latest_price(self, symbol: str) -> Optional[float]:
