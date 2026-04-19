@@ -6,7 +6,7 @@ BTC/USD price data.
 from typing import List, Optional
 import pandas as pd
 from alpaca.data.historical.crypto import CryptoHistoricalDataClient
-from alpaca.data.requests import CryptoBarsRequest
+from alpaca.data.requests import CryptoBarsRequest, CryptoLatestQuoteRequest
 from alpaca.data.timeframe import TimeFrame
 from datetime import datetime, timedelta
 
@@ -93,7 +93,10 @@ class AlpacaDataFetcher:
             return None
     
     def get_latest_price(self, symbol: str) -> Optional[float]:
-        """Get the latest price for a symbol.
+        """Get the latest price for a symbol using real-time quote.
+        
+        Uses the latest quote endpoint for most current price data,
+        falling back to historical bars if not available.
         
         Args:
             symbol: Trading pair symbol (e.g., "BTC/USD")
@@ -101,12 +104,39 @@ class AlpacaDataFetcher:
         Returns:
             Latest price or None if error
         """
-        bars = self.get_historical_bars(symbol, limit=1)
-        
-        if bars is None or bars.empty:
+        try:
+            client = self._get_client()
+            
+            # Try to get latest quote (real-time data)
+            request = CryptoLatestQuoteRequest(symbol_or_symbols=symbol)
+            quotes = client.get_crypto_latest_quote(request)
+            
+            if quotes and symbol in quotes:
+                quote = quotes[symbol]
+                # Use mid price between bid and ask
+                if hasattr(quote, 'bid_price') and hasattr(quote, 'ask_price'):
+                    mid_price = (quote.bid_price + quote.ask_price) / 2
+                    return float(mid_price)
+                elif hasattr(quote, 'price'):
+                    return float(quote.price)
+            
+            # Fallback to historical bars if quote not available
+            bars = self.get_historical_bars(symbol, limit=1)
+            if bars is not None and not bars.empty:
+                return float(bars['close'].iloc[-1])
+            
             return None
-        
-        return float(bars['close'].iloc[-1])
+            
+        except Exception as e:
+            print(f"Error fetching latest price: {e}")
+            # Fallback to historical bars
+            try:
+                bars = self.get_historical_bars(symbol, limit=1)
+                if bars is not None and not bars.empty:
+                    return float(bars['close'].iloc[-1])
+            except:
+                pass
+            return None
 
 
 def extract_closes(bars: Optional[pd.DataFrame]) -> List[float]:
