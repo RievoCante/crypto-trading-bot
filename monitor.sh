@@ -85,16 +85,16 @@ show_trade_stats() {
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     
     # Count successful trades
-    local buy_trades=$(docker logs $CONTAINER_NAME 2>&1 | grep -c "BUY.*Order executed" || echo "0")
-    local sell_trades=$(docker logs $CONTAINER_NAME 2>&1 | grep -c "SELL.*Order executed" || echo "0")
+    local buy_trades=$(docker logs $CONTAINER_NAME 2>&1 | grep -c "Signal: BUY" 2>/dev/null || echo 0)
+    local sell_trades=$(docker logs $CONTAINER_NAME 2>&1 | grep -c "Signal: SELL" 2>/dev/null || echo 0)
     local total_trades=$((buy_trades + sell_trades))
     
     # Count errors
-    local errors=$(docker logs $CONTAINER_NAME 2>&1 | grep -c "Error" || echo "0")
+    local errors=$(docker logs $CONTAINER_NAME 2>&1 | grep -c "Error" 2>/dev/null || echo 0)
     
     echo "Buy Orders:   $buy_trades"
     echo "Sell Orders:  $sell_trades"
-    echo -e "Total:        ${GREEN}$total_trades${NC}"
+    echo -e "Total Trades: ${GREEN}$total_trades${NC}"
     
     if [ "$errors" -gt 0 ]; then
         echo -e "Errors:       ${RED}$errors${NC}"
