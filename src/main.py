@@ -79,15 +79,11 @@ class TradingBot:
             latest_str = f"{latest_price:,.2f}" if latest_price else "N/A"
             print(f"  Price: ${current_price:,.2f} | Data points: {len(closes)} (Live: ${latest_str})")
             
-            # Step 3: Get current position
-            if self.config.paper_mode:
-                current_btc = self.trader.btc_position
-                portfolio_value = self.trader.get_portfolio_value(current_price)
-            else:
-                positions = self.trader.get_positions()
-                current_btc = positions.get(self.config.btc_symbol, {}).get('qty', 0.0)
-                account = self.trader.get_account()
-                portfolio_value = account['portfolio_value'] if account else 0.0
+            # Step 3: Get current position from Alpaca
+            positions = self.trader.get_positions()
+            current_btc = positions.get(self.config.btc_symbol, {}).get('qty', 0.0)
+            account = self.trader.get_account()
+            portfolio_value = account['portfolio_value'] if account else current_price * current_btc
             
             # Track starting value for daily P&L
             if self.starting_portfolio_value is None:
