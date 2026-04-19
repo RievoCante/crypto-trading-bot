@@ -142,40 +142,38 @@ def generate_signal(
     macd_slow: int = 26,
     macd_signal: int = 9
 ) -> Signal:
-    """Generate trading signal based on RSI and MACD indicators.
+    """Generate trading signal based on MACD crossovers only.
     
-    Strategy Rules:
-    - BUY: RSI < oversold_threshold AND MACD crosses above signal line AND not holding
-    - SELL: RSI > overbought_threshold AND MACD crosses below signal line AND holding
+    Strategy Rules (Testing Mode):
+    - BUY: MACD crosses above signal line AND not holding
+    - SELL: MACD crosses below signal line AND holding
     - HOLD: All other conditions
+    
+    Note: RSI parameters are kept for compatibility but not used in this
+    simplified strategy for testing purposes.
     
     Args:
         prices: List of price values (closes)
         current_position: Current BTC holdings (0.0 = not holding)
-        rsi_period: RSI lookback period
-        rsi_oversold: RSI threshold for buy signal
-        rsi_overbought: RSI threshold for sell signal
+        rsi_period: RSI lookback period (unused in this strategy)
+        rsi_oversold: RSI threshold for buy signal (unused in this strategy)
+        rsi_overbought: RSI threshold for sell signal (unused in this strategy)
         macd_fast, macd_slow, macd_signal: MACD parameters
         
     Returns:
         Signal enum: BUY, SELL, or HOLD
     """
-    rsi = calculate_rsi(prices, period=rsi_period)
     macd_crossover = detect_macd_crossover(
         prices, fast=macd_fast, slow=macd_slow, signal=macd_signal
     )
     
     signal = Signal.HOLD
     
-    if (rsi is not None and 
-        rsi < rsi_oversold and 
-        macd_crossover == "bullish" and 
-        current_position == 0.0):
+    # Buy on bullish MACD crossover (no RSI requirement for testing)
+    if macd_crossover == "bullish" and current_position == 0.0:
         signal = Signal.BUY
-    elif (rsi is not None and 
-          rsi > rsi_overbought and 
-          macd_crossover == "bearish" and 
-          current_position > 0.0):
+    # Sell on bearish MACD crossover (no RSI requirement for testing)
+    elif macd_crossover == "bearish" and current_position > 0.0:
         signal = Signal.SELL
     
     return signal

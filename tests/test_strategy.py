@@ -126,110 +126,92 @@ class TestMACDCrossoverDetection:
 
 
 class TestSignalGeneration:
-    """Test trading signal generation logic."""
+    """Test trading signal generation logic (MACD-only strategy for testing)."""
 
-    def test_generate_signal_buy_when_rsi_oversold_and_macd_bullish(self):
-        """Test BUY signal when RSI < 30 and MACD crosses above signal."""
+    def test_generate_signal_returns_valid_signal(self):
+        """Test that generate_signal returns a valid Signal enum."""
         from src.strategy import generate_signal, Signal
         
-        # Create oversold RSI + bullish MACD
-        falling_prices = list(range(150, 100, -2))
-        rising_prices = list(range(100, 110))
-        prices = falling_prices + rising_prices
+        prices = list(range(100, 180))
         
         signal = generate_signal(
             prices=prices,
             current_position=0.0,
-            rsi_period=14,
-            rsi_oversold=30.0,
-            rsi_overbought=70.0,
             macd_fast=12,
             macd_slow=26,
             macd_signal=9
         )
         
-        assert signal is not None
+        # Should return a valid Signal
+        assert isinstance(signal, Signal)
+        assert signal in [Signal.BUY, Signal.SELL, Signal.HOLD]
 
-    def test_generate_signal_sell_when_rsi_overbought_and_macd_bearish(self):
-        """Test SELL signal when RSI > 70 and MACD crosses below signal."""
+    def test_generate_signal_with_no_position(self):
+        """Test signal generation when not holding position."""
         from src.strategy import generate_signal, Signal
         
-        # Create overbought RSI + bearish MACD
-        rising_prices = list(range(100, 150, 2))
-        falling_prices = list(range(150, 140, -1))
-        prices = rising_prices + falling_prices
+        prices = list(range(100, 180))
         
         signal = generate_signal(
             prices=prices,
-            current_position=0.5,
-            rsi_period=14,
-            rsi_oversold=30.0,
-            rsi_overbought=70.0,
+            current_position=0.0,  # Not holding
             macd_fast=12,
             macd_slow=26,
             macd_signal=9
         )
         
-        assert signal is not None
+        # Should not be SELL if not holding
+        assert signal != Signal.SELL
 
-    def test_generate_signal_hold_when_no_conditions_met(self):
-        """Test HOLD signal when no buy/sell conditions are met."""
+    def test_generate_signal_with_position(self):
+        """Test signal generation when holding position."""
         from src.strategy import generate_signal, Signal
         
-        # Neutral price data
-        prices = [100 + (i % 5) for i in range(50)]
+        prices = list(range(100, 180))
         
         signal = generate_signal(
             prices=prices,
-            current_position=0.0,
-            rsi_period=14,
-            rsi_oversold=30.0,
-            rsi_overbought=70.0,
+            current_position=0.5,  # Holding BTC
             macd_fast=12,
             macd_slow=26,
             macd_signal=9
         )
         
-        assert signal is not None
+        # Should not be BUY if already holding
+        assert signal != Signal.BUY
 
     def test_no_buy_if_already_holding_position(self):
         """Test that we don't get BUY signal if already holding BTC."""
         from src.strategy import generate_signal, Signal
         
-        falling_prices = list(range(150, 100, -2))
-        rising_prices = list(range(100, 110))
-        prices = falling_prices + rising_prices
+        # Use varying prices that might trigger signals
+        prices = [100 + (i % 10) for i in range(80)]
         
         signal = generate_signal(
             prices=prices,
             current_position=0.5,  # Already holding
-            rsi_period=14,
-            rsi_oversold=30.0,
-            rsi_overbought=70.0,
             macd_fast=12,
             macd_slow=26,
             macd_signal=9
         )
         
+        # Should not be BUY since we're already holding
         assert signal != Signal.BUY
 
     def test_no_sell_if_not_holding_position(self):
         """Test that we don't get SELL signal if not holding BTC."""
         from src.strategy import generate_signal, Signal
         
-        rising_prices = list(range(100, 150, 2))
-        falling_prices = list(range(150, 140, -1))
-        prices = rising_prices + falling_prices
+        # Use varying prices that might trigger signals
+        prices = [100 + (i % 10) for i in range(80)]
         
         signal = generate_signal(
             prices=prices,
             current_position=0.0,  # Not holding
-            rsi_period=14,
-            rsi_oversold=30.0,
-            rsi_overbought=70.0,
             macd_fast=12,
             macd_slow=26,
             macd_signal=9
         )
         
+        # Should not be SELL since we're not holding
         assert signal != Signal.SELL
