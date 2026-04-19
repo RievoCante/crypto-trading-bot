@@ -85,3 +85,97 @@ def calculate_macd(
         return (macd_line, signal_line, histogram)
     except Exception:
         return None
+
+
+def detect_macd_crossover(
+    prices: List[float],
+    fast: int = 12,
+    slow: int = 26,
+    signal: int = 9
+) -> Optional[str]:
+    """Detect if MACD line has crossed above or below the signal line.
+    
+    Args:
+        prices: List of price values
+        fast, slow, signal: MACD parameters
+        
+    Returns:
+        'bullish' if MACD crossed above signal, 'bearish' if crossed below,
+        None if no crossover or insufficient data
+    """
+    min_periods = slow + signal + 2
+    if len(prices) < min_periods:
+        return None
+    
+    try:
+        series = pd.Series(prices)
+        macd_result = ta.macd(series, fast=fast, slow=slow, signal=signal)
+        
+        if macd_result is None or len(macd_result) < 2:
+            return None
+        
+        macd_col = f"MACD_{fast}_{slow}_{signal}"
+        signal_col = f"MACDs_{fast}_{slow}_{signal}"
+        
+        prev_macd = float(macd_result[macd_col].iloc[-2])
+        prev_signal = float(macd_result[signal_col].iloc[-2])
+        curr_macd = float(macd_result[macd_col].iloc[-1])
+        curr_signal = float(macd_result[signal_col].iloc[-1])
+        
+        if prev_macd <= prev_signal and curr_macd > curr_signal:
+            return "bullish"
+        elif prev_macd >= prev_signal and curr_macd < curr_signal:
+            return "bearish"
+        
+        return None
+    except Exception:
+        return None
+
+
+def generate_signal(
+    prices: List[float],
+    current_position: float,
+    rsi_period: int = 14,
+    rsi_oversold: float = 30.0,
+    rsi_overbought: float = 70.0,
+    macd_fast: int = 12,
+    macd_slow: int = 26,
+    macd_signal: int = 9
+) -> Signal:
+    """Generate trading signal based on RSI and MACD indicators.
+    
+    Strategy Rules:
+    - BUY: RSI < oversold_threshold AND MACD crosses above signal line AND not holding
+    - SELL: RSI > overbought_threshold AND MACD crosses below signal line AND holding
+    - HOLD: All other conditions
+    
+    Args:
+        prices: List of price values (closes)
+        current_position: Current BTC holdings (0.0 = not holding)
+        rsi_period: RSI lookback period
+        rsi_oversold: RSI threshold for buy signal
+        rsi_overbought: RSI threshold for sell signal
+        macd_fast, macd_slow, macd_signal: MACD parameters
+        
+    Returns:
+        Signal enum: BUY, SELL, or HOLD
+    """
+    rsi = calculate_rsi(prices, period=rsi_period)
+    macd_crossover = detect_macd_crossover(
+        prices, fast=macd_fast, slow=macd_slow, signal=macd_signal
+    )
+    
+    signal = Signal.HOLD
+    
+    if (rsi is not None and 
+        rsi < rsi_oversold and 
+        macd_crossover == "bullish" and 
+        current_position == 0.0):
+        signal = Signal.BUY
+    elif (rsi is not None and 
+          rsi > rsi_overbought and 
+          macd_crossover == "bearish" and 
+          current_position > 0.0):
+        signal = Signal.SELL
+    
+    return signal
